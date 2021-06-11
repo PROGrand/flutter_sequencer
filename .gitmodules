@@ -7,7 +7,7 @@
 [submodule "android/third_party/AudioKit"]
 	path = android/third_party/AudioKit
 	url = https://github.com/AudioKit/AudioKit
-	branch = v4-master
+	branch = v4
 [submodule "android/third_party/libnyquist"]
 	path = android/third_party/libnyquist
 	url = https://github.com/mikeperri/libnyquist.git
