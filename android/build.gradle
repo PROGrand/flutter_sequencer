@@ -11,7 +11,6 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:4.1.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'org.ajoberstar.grgit:grgit-gradle:4.1.0'
     }
 }
 
@@ -51,29 +50,6 @@ android {
     }
 }
 
-void cloneThirdPartyRepo(String name, String uri, String branch) {
-    def dirPath = "$projectDir/third_party/$name"
-    def dir = new File(dirPath)
-
-    if (!dir.exists()) {
-        dir.mkdirs()
-        org.ajoberstar.grgit.Grgit.clone(
-            dir: dirPath,
-            uri: uri,
-            refToCheckout: branch
-        )
-    }
-}
-
-task cloneThirdPartyRepos {
-    cloneThirdPartyRepo('AudioKit', 'https://github.com/AudioKit/AudioKit', 'v4')
-    cloneThirdPartyRepo('libnyquist', 'https://github.com/mikeperri/libnyquist.git', 'fix-wavpack-int-lossy')
-    cloneThirdPartyRepo('oboe', 'https://github.com/google/oboe', '1.4-stable')
-    cloneThirdPartyRepo('TinySoundFont', 'https://github.com/schellingb/TinySoundFont.git', 'master')
-}
-
-preBuild.dependsOn cloneThirdPartyRepos
-
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }
