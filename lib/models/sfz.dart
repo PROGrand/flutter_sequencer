@@ -1,12 +1,9 @@
 /// Learn more about the SFZ format here: <https://sfzformat.com/headers/>
-
 String opcodeMapToString(Map<String, String>? opcodeMap) {
   if (opcodeMap == null) {
     return '';
   } else {
-    return opcodeMap.entries
-        .map((entry) => '${entry.key}=${entry.value}\n')
-        .join('');
+    return opcodeMap.entries.map((entry) => '${entry.key}=${entry.value}\n').join('');
   }
 }
 
@@ -31,16 +28,7 @@ class SfzRegion {
   Map<String, String>? otherOpcodes;
 
   String buildString() {
-    return '<region>\n' +
-        (sample != null ? 'sample=$sample\n' : '') +
-        (key != null ? 'key=$key\n' : '') +
-        (lokey != null ? 'lokey=$lokey\n' : '') +
-        (hikey != null ? 'hikey=$hikey\n' : '') +
-        (lovel != null ? 'lovel=$lovel\n' : '') +
-        (hivel != null ? 'hivel=$hivel\n' : '') +
-        (loopStart != null ? 'loop_start=$loopStart\n' : '') +
-        (loopEnd != null ? 'loop_end=$loopEnd\n' : '') +
-        (opcodeMapToString(otherOpcodes));
+    return '<region>\n${sample != null ? 'sample=$sample\n' : ''}${key != null ? 'key=$key\n' : ''}${lokey != null ? 'lokey=$lokey\n' : ''}${hikey != null ? 'hikey=$hikey\n' : ''}${lovel != null ? 'lovel=$lovel\n' : ''}${hivel != null ? 'hivel=$hivel\n' : ''}${loopStart != null ? 'loop_start=$loopStart\n' : ''}${loopEnd != null ? 'loop_end=$loopEnd\n' : ''}${opcodeMapToString(otherOpcodes)}';
   }
 }
 
@@ -54,9 +42,7 @@ class SfzGroup {
   List<SfzRegion> regions;
 
   String buildString() {
-    return '<group>\n' +
-        (opcodeMapToString(opcodes)) +
-        regions.map((r) => r.buildString()).join('');
+    return '<group>\n${opcodeMapToString(opcodes)}${regions.map((r) => r.buildString()).join('')}';
   }
 }
 
@@ -68,7 +54,7 @@ class SfzControl {
   Map<String, String>? opcodes;
 
   String buildString() {
-    return '<control>\n' + (opcodeMapToString(opcodes));
+    return '<control>\n${opcodeMapToString(opcodes)}';
   }
 }
 
@@ -80,7 +66,7 @@ class SfzGlobal {
   Map<String, String>? opcodes;
 
   String buildString() {
-    return '<global>\n' + (opcodeMapToString(opcodes));
+    return '<global>\n${opcodeMapToString(opcodes)}';
   }
 }
 
@@ -92,7 +78,7 @@ class SfzEffect {
   Map<String, String>? opcodes;
 
   String buildString() {
-    return '<effect>\n' + (opcodeMapToString(opcodes));
+    return '<effect>\n${opcodeMapToString(opcodes)}';
   }
 }
 
@@ -104,7 +90,7 @@ class SfzCurve {
   Map<String, String>? opcodes;
 
   String buildString() {
-    return '<curve>\n' + (opcodeMapToString(opcodes));
+    return '<curve>\n${opcodeMapToString(opcodes)}';
   }
 }
 
@@ -128,13 +114,14 @@ class Sfz {
   void _setNoteRanges() {
     final allRegions = [];
 
-    groups.forEach((g) => allRegions.addAll(g.regions));
+    for (final g in groups) {
+      allRegions.addAll(g.regions);
+    }
 
     allRegions.sort((a, b) => a.key - b.key);
     allRegions.asMap().forEach((index, sd) {
       final prevSd = index > 0 ? allRegions[index - 1] : null;
-      final nextSd =
-          index < allRegions.length - 1 ? allRegions[index + 1] : null;
+      final nextSd = index < allRegions.length - 1 ? allRegions[index + 1] : null;
 
       if (sd.lokey == null) {
         if (prevSd == null) {

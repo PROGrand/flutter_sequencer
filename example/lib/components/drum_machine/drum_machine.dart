@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_sequencer/track.dart';
-
 import 'package:flutter_sequencer_example/models/step_sequencer_state.dart';
 
-import 'volume_slider.dart';
 import 'grid/grid.dart';
+import 'volume_slider.dart';
 
 class DrumMachineWidget extends StatefulWidget {
   const DrumMachineWidget({
-    Key? key,
+    super.key,
     required this.track,
     required this.stepCount,
     required this.currentStep,
@@ -19,7 +18,7 @@ class DrumMachineWidget extends StatefulWidget {
     required this.stepSequencerState,
     required this.handleVolumeChange,
     required this.handleVelocitiesChange,
-  }) : super(key: key);
+  });
 
   final Track track;
   final int stepCount;
@@ -32,26 +31,18 @@ class DrumMachineWidget extends StatefulWidget {
   final Function(int, int, int, double) handleVelocitiesChange;
 
   @override
-  _DrumMachineWidgetState createState() => _DrumMachineWidgetState();
+  State<StatefulWidget> createState() => _DrumMachineWidgetState();
 }
 
-class _DrumMachineWidgetState extends State<DrumMachineWidget>
-    with SingleTickerProviderStateMixin {
+class _DrumMachineWidgetState extends State<DrumMachineWidget> with SingleTickerProviderStateMixin {
   Ticker? ticker;
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   double? getVelocity(int step, int col) {
-    return widget.stepSequencerState!
-        .getVelocity(step, widget.columnPitches[col]);
+    return widget.stepSequencerState!.getVelocity(step, widget.columnPitches[col]);
   }
 
   void handleVelocityChange(int col, int step, double velocity) {
-    widget.handleVelocitiesChange(
-        widget.track.id, step, widget.columnPitches[col], velocity);
+    widget.handleVelocitiesChange(widget.track.id, step, widget.columnPitches[col], velocity);
   }
 
   void handleVolumeChange(double nextVolume) {
@@ -59,8 +50,7 @@ class _DrumMachineWidgetState extends State<DrumMachineWidget>
   }
 
   void handleNoteOn(int col) {
-    widget.track
-        .startNoteNow(noteNumber: widget.columnPitches[col], velocity: .75);
+    widget.track.startNoteNow(noteNumber: widget.columnPitches[col], velocity: .75);
   }
 
   void handleNoteOff(int col) {
@@ -70,22 +60,26 @@ class _DrumMachineWidgetState extends State<DrumMachineWidget>
   @override
   Widget build(BuildContext context) {
     return Expanded(
-        child: Container(
-            padding: EdgeInsets.fromLTRB(32, 16, 32, 0),
-            decoration: BoxDecoration(
-              color: Colors.black54,
+      child: Container(
+        padding: EdgeInsets.fromLTRB(32, 16, 32, 0),
+        decoration: BoxDecoration(color: Colors.black54),
+        child: Column(
+          children: [
+            VolumeSlider(value: widget.volume, onChange: handleVolumeChange),
+            Expanded(
+              child: Grid(
+                columnLabels: widget.rowLabels,
+                getVelocity: getVelocity,
+                stepCount: widget.stepCount,
+                currentStep: widget.currentStep,
+                onChange: handleVelocityChange,
+                onNoteOn: handleNoteOn,
+                onNoteOff: handleNoteOff,
+              ),
             ),
-            child: Column(children: [
-              VolumeSlider(value: widget.volume, onChange: handleVolumeChange),
-              Expanded(
-                  child: Grid(
-                      columnLabels: widget.rowLabels,
-                      getVelocity: getVelocity,
-                      stepCount: widget.stepCount,
-                      currentStep: widget.currentStep,
-                      onChange: handleVelocityChange,
-                      onNoteOn: handleNoteOn,
-                      onNoteOff: handleNoteOff)),
-            ])));
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -4,22 +4,23 @@ group 'com.michaeljperri.flutter_sequencer'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.5.21'
+    ext.kotlin_version = '1.9.10'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.2'
+        classpath 'com.android.tools.build:gradle:8.6.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.eclipse.jgit:org.eclipse.jgit:5.12.0+"
+        classpath "org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r"
     }
 }
 
 rootProject.allprojects {
     repositories {
         google()
+        mavenCentral()
     }
 }
 
@@ -27,30 +28,47 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 29
+    namespace "com.michaeljperri.flutter_sequencer"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+
+    compileSdk = 35
+    ndkVersion = "27.0.12077973"
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
+
     defaultConfig {
-        minSdkVersion 16
+        minSdk 23
 
         externalNativeBuild {
             cmake {
-                cppFlags '-std=c++17', '-frelaxed-template-template-args'
+                arguments "-DCMAKE_CXX_STANDARD=17", "-DCMAKE_CXX_STANDARD_REQUIRED=ON"
+                cppFlags '-frelaxed-template-template-args'
             }
+        }
+
+        ndk {
+            abiFilters "arm64-v8a"
         }
     }
     lintOptions {
         disable 'InvalidPackage'
     }
-    ndkVersion "22.1.7171670"
+
     externalNativeBuild {
         cmake {
-            version "3.18.1"
             path "CMakeLists.txt"
         }
     }
+
 }
 
 void cloneThirdPartyRepo(String name, String uri, String commit) {
@@ -60,12 +78,12 @@ void cloneThirdPartyRepo(String name, String uri, String commit) {
     if (!dir.exists()) {
         dir.mkdirs()
         def repo =
-            Git.cloneRepository()
-                .setDirectory(dir)
-                .setURI(uri)
-                .setRemote('origin')
-                .setCloneSubmodules(true)
-                .call()
+                Git.cloneRepository()
+                        .setDirectory(dir)
+                        .setURI(uri)
+                        .setRemote('origin')
+                        .setCloneSubmodules(true)
+                        .call()
 
         repo.checkout().setName(commit).call()
         repo.submoduleUpdate()
@@ -80,7 +98,3 @@ task cloneThirdPartyRepos {
 }
 
 preBuild.dependsOn cloneThirdPartyRepos
-
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-}

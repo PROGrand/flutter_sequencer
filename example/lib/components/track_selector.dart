@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_sequencer/track.dart';
 
 class TrackSelector extends StatelessWidget {
-  TrackSelector({
+  const TrackSelector({
+    super.key,
     required this.selectedTrack,
     required this.tracks,
     required this.handleChange,
@@ -16,11 +16,11 @@ class TrackSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButton<Track>(
-        value: selectedTrack,
-        onChanged: handleChange,
-        items: tracks.map((track) {
-          return DropdownMenuItem<Track>(
-              value: track, child: Text(track.instrument.displayName));
-        }).toList());
+      value: selectedTrack,
+      onChanged: handleChange,
+      items: tracks.map((track) {
+        return DropdownMenuItem<Track>(value: track, child: Text(track.instrument.displayName));
+      }).toList(),
+    );
   }
 }

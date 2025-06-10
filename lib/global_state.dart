@@ -76,9 +76,8 @@ class GlobalState {
     final shouldPlayEngine = !_getIsPlaying();
 
     sequence.isPlaying = true;
-    sequence.engineStartFrame = LEAD_FRAMES +
-        NativeBridge.getPosition() -
-        sequence.beatToFrames(sequence.pauseBeat);
+    sequence.engineStartFrame =
+        LEAD_FRAMES + NativeBridge.getPosition() - sequence.beatToFrames(sequence.pauseBeat);
 
     _syncAllBuffers();
 
@@ -122,7 +121,9 @@ class GlobalState {
   void _setupEngine() async {
     sampleRate = await NativeBridge.doSetup();
     isEngineReady = true;
-    onEngineReadyCallbacks.forEach((callback) => callback());
+    for (final callback in onEngineReadyCallbacks) {
+      callback();
+    }
 
     if (keepEngineRunning) {
       NativeBridge.play();
@@ -141,7 +142,9 @@ class GlobalState {
     _topOffTimer = Timer.periodic(Duration(milliseconds: 1000), (_) {
       _topOffAllBuffers();
 
-      sequenceIdMap.values.forEach((sequence) => sequence.checkIsOver());
+      for (var sequence in sequenceIdMap.values) {
+        sequence.checkIsOver();
+      }
     });
   }
 
@@ -171,8 +174,7 @@ class GlobalState {
     });
   }
 
-  void _syncAllBuffers(
-      [int? absoluteStartFrame, int maxEventsToSync = BUFFER_SIZE]) {
+  void _syncAllBuffers([int? absoluteStartFrame, int maxEventsToSync = BUFFER_SIZE]) {
     _getAllTracks().forEach((track) {
       track.syncBuffer(absoluteStartFrame, maxEventsToSync);
     });

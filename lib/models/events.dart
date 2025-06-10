@@ -62,8 +62,9 @@ class MidiEvent extends SchedulerEvent {
     required int noteNumber,
     required int velocity,
   }) {
-    if (noteNumber > 127 || noteNumber < 0)
+    if (noteNumber > 127 || noteNumber < 0) {
       throw 'noteNumber must be in range 0-127';
+    }
     if (velocity > 127 || velocity < 0) throw 'Velocity must be in range 0-127';
 
     return MidiEvent(
@@ -78,8 +79,9 @@ class MidiEvent extends SchedulerEvent {
     required double beat,
     required int noteNumber,
   }) {
-    if (noteNumber > 127 || noteNumber < 0)
+    if (noteNumber > 127 || noteNumber < 0) {
       throw 'noteNumber must be in range 0-127';
+    }
 
     return MidiEvent(
       beat: beat,
@@ -141,8 +143,8 @@ class VolumeEvent extends SchedulerEvent {
   }
 
   @override
-  ByteData serializeBytes(int sampleRate, double beat, int correctionFrames) {
-    final data = super.serializeBytes(sampleRate, beat, correctionFrames);
+  ByteData serializeBytes(int sampleRate, double tempo, int correctionFrames) {
+    final data = super.serializeBytes(sampleRate, tempo, correctionFrames);
 
     data.setFloat32(SCHEDULER_EVENT_DATA_OFFSET, volume!, Endian.host);
 
