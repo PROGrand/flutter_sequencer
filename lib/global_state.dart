@@ -142,7 +142,7 @@ class GlobalState {
     _topOffTimer = Timer.periodic(Duration(milliseconds: 1000), (_) {
       _topOffAllBuffers();
 
-      for (var sequence in sequenceIdMap.values) {
+      for (final sequence in sequenceIdMap.values) {
         sequence.checkIsOver();
       }
     });

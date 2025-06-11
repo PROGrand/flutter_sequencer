@@ -44,10 +44,10 @@ void _castComplete<R>(Completer<R> completer, Object value) {
 
 Future<R> singleResponseFuture<R>(void Function(SendPort responsePort) action,
     {Duration? timeout, R? timeoutValue}) {
-  var completer = Completer<R>.sync();
-  var responsePort = RawReceivePort();
+  final completer = Completer<R>.sync();
+  final responsePort = RawReceivePort();
   Timer? timer;
-  var zone = Zone.current;
+  final zone = Zone.current;
   responsePort.handler = (Object response) {
     responsePort.close();
     timer?.cancel();
