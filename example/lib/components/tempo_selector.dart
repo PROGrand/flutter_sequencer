@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class TempoSelector extends StatefulWidget {
-  TempoSelector({super.key, required this.selectedTempo, required this.handleChange}) {
+  TempoSelector({required this.selectedTempo, required this.handleChange, super.key}) {
     // TODO: implement TempoSelector
     // throw UnimplementedError();
   }
@@ -51,17 +51,16 @@ class _TempoSelectorState extends State<TempoSelector> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(margin: EdgeInsets.only(right: 16.0), child: Text('Tempo:')),
+        Container(margin: const EdgeInsets.only(right: 16.0), child: const Text('Tempo:')),
         SizedBox(
           width: 50,
           height: 50,
           child: TextField(
             controller: controller,
-            maxLines: 1,
             keyboardType: TextInputType.number,
             onSubmitted: handleTextChange,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(hintText: "..."),
+            decoration: const InputDecoration(hintText: '...'),
           ),
         ),
       ],

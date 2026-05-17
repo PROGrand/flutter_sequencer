@@ -8,30 +8,21 @@ import 'native_bridge.dart';
 import 'track.dart';
 
 /// {@macro flutter_sequencer_library_private}
-enum LoopState {
-  Off,
-  BeforeLoopEnd,
-  AfterLoopEnd,
-}
+enum LoopState { off, beforeLoopEnd, afterLoopEnd }
 
 /// Represents a collection of tracks, play/pause state, position, loop state,
 /// and tempo. Play the sequence to schedule the events on its tracks.
 class Sequence {
-  static final GlobalState globalState = GlobalState();
-
-  Sequence({
-    required this.tempo,
-    required this.endBeat,
-  }) {
+  Sequence({required this.tempo, required this.endBeat}) {
     id = globalState.registerSequence(this);
   }
+
+  static final GlobalState globalState = GlobalState();
 
   /// Call this to remove this sequence and its tracks from the global sequencer
   /// engine.
   void destroy() {
-    for (final track in _tracks.values) {
-      deleteTrack(track);
-    }
+    _tracks.values.forEach(deleteTrack);
     globalState.unregisterSequence(this);
   }
 
@@ -44,7 +35,7 @@ class Sequence {
   double endBeat;
   double pauseBeat = 0;
   int engineStartFrame = 0;
-  LoopState loopState = LoopState.Off;
+  LoopState loopState = LoopState.off;
   double loopStartBeat = 0;
   double loopEndBeat = 0;
 
@@ -54,7 +45,7 @@ class Sequence {
   }
 
   /// Creates tracks in the underlying sequencer engine.
-  Future<List<Track>> createTracks(List<Instrument> instruments) async {
+  Future<List<Track>> createTracks(List<Instrument> instruments) {
     if (globalState.isEngineReady) {
       return _createTracks(instruments);
     } else {
@@ -72,7 +63,7 @@ class Sequence {
 
   /// Removes a track from the underlying sequencer engine.
   List<Track> deleteTrack(Track track) {
-    final keysToRemove = [];
+    final keysToRemove = <int>[];
 
     _tracks.forEach((key, value) {
       if (value == track) {
@@ -94,7 +85,7 @@ class Sequence {
     if (!globalState.isEngineReady) return;
 
     if (getIsOver()) {
-      setBeat(0.0);
+      setBeat(0);
     }
 
     globalState.playSequence(id);
@@ -114,7 +105,7 @@ class Sequence {
   /// Stops playback of this sequence and resets its position to the beginning.
   void stop() {
     pause();
-    setBeat(0.0);
+    setBeat(0);
     for (final track in _tracks.values) {
       List.generate(128, (noteNumber) {
         track.stopNoteNow(noteNumber: noteNumber);
@@ -125,8 +116,9 @@ class Sequence {
   /// Sets the tempo.
   void setTempo(double nextTempo) {
     // Update engine start frame to remove excess loops
-    final loopsElapsed =
-        loopState == LoopState.BeforeLoopEnd ? getLoopsElapsed(_getFramesRendered()) : 0;
+    final loopsElapsed = loopState == LoopState.beforeLoopEnd
+        ? getLoopsElapsed(_getFramesRendered())
+        : 0;
     engineStartFrame += loopsElapsed * getLoopLengthFrames();
 
     // Update engine start frame to adjust to new tempo
@@ -149,8 +141,9 @@ class Sequence {
     checkIsOver();
 
     // Update engine start frame to remove excess loops
-    final loopsElapsed =
-        loopState == LoopState.BeforeLoopEnd ? getLoopsElapsed(_getFramesRendered()) : 0;
+    final loopsElapsed = loopState == LoopState.beforeLoopEnd
+        ? getLoopsElapsed(_getFramesRendered())
+        : 0;
     engineStartFrame += loopsElapsed * getLoopLengthFrames();
 
     // Update loop state and bounds
@@ -158,9 +151,9 @@ class Sequence {
     final currentFrame = _getFrame(false);
 
     if (currentFrame <= loopEndFrame) {
-      loopState = LoopState.BeforeLoopEnd;
+      loopState = LoopState.beforeLoopEnd;
     } else {
-      loopState = LoopState.AfterLoopEnd;
+      loopState = LoopState.afterLoopEnd;
     }
 
     this.loopStartBeat = loopStartBeat;
@@ -171,7 +164,7 @@ class Sequence {
 
   /// Disables looping for the sequence.
   void unsetLoop() {
-    if (loopState == LoopState.BeforeLoopEnd) {
+    if (loopState == LoopState.beforeLoopEnd) {
       final loopsElapsed = getLoopsElapsed(_getFramesRendered());
 
       engineStartFrame += loopsElapsed * getLoopLengthFrames();
@@ -179,15 +172,9 @@ class Sequence {
 
     loopStartBeat = 0;
     loopEndBeat = 0;
-    loopState = LoopState.Off;
+    loopState = LoopState.off;
 
     getTracks().forEach((track) => track.syncBuffer());
-  }
-
-  /// Sets the beat at which the sequence will end. Events after the end beat
-  /// won't be scheduled.
-  void setEndBeat(double beat) {
-    endBeat = beat;
   }
 
   /// Immediately changes the position of the sequence to the given beat.
@@ -198,7 +185,7 @@ class Sequence {
       NativeBridge.resetTrack(track.id);
     }
 
-    final leadFrames = getIsPlaying() ? min(_getFramesRendered(), LEAD_FRAMES) : 0;
+    final leadFrames = getIsPlaying() ? min(_getFramesRendered(), kLeadFrames) : 0;
 
     final frame = beatToFrames(beat) - leadFrames;
 
@@ -209,9 +196,9 @@ class Sequence {
       track.syncBuffer(engineStartFrame);
     });
 
-    if (loopState != LoopState.Off) {
+    if (loopState != LoopState.off) {
       final loopEndFrame = beatToFrames(loopEndBeat);
-      loopState = frame < loopEndFrame ? LoopState.BeforeLoopEnd : LoopState.AfterLoopEnd;
+      loopState = frame < loopEndFrame ? LoopState.beforeLoopEnd : LoopState.afterLoopEnd;
     }
   }
 
@@ -222,13 +209,13 @@ class Sequence {
 
   /// Returns true if the sequence is at its end beat.
   bool getIsOver() {
-    return _getFrame(true) == beatToFrames(endBeat);
+    return _getFrame() == beatToFrames(endBeat);
   }
 
   /// Gets the current beat. Returns a value based on the number of frames
   /// rendered and the time elapsed since the last render callback. To omit
   /// the time elapsed since the last render callback, pass `false`.
-  double getBeat([bool estimateFramesSinceLastRender = true]) {
+  double getBeat({bool estimateFramesSinceLastRender = true}) {
     return framesToBeat(_getFrame(estimateFramesSinceLastRender));
   }
 
@@ -274,7 +261,7 @@ class Sequence {
   /// Converts a beat to sample frames.
   int beatToFrames(double beat) {
     // (min / b) * (ms) * (ms / min)
-    final us = ((1 / tempo) * beat * (60000000)).round();
+    final us = ((1 / tempo) * beat * 60000000).round();
 
     return Sequence.globalState.usToFrames(us);
   }
@@ -304,7 +291,7 @@ class Sequence {
   int _getFramesRendered() {
     if (!globalState.isEngineReady) return 0;
 
-    return NativeBridge.getPosition() - engineStartFrame - LEAD_FRAMES;
+    return NativeBridge.getPosition() - engineStartFrame - kLeadFrames;
   }
 
   /// Gets the current frame position of the sequencer.
@@ -314,7 +301,7 @@ class Sequence {
     if (isPlaying) {
       final frame =
           _getFramesRendered() + (estimateFramesSinceLastRender ? _getFramesSinceLastRender() : 0);
-      final loopedFrame = loopState == LoopState.Off ? frame : getLoopedFrame(frame);
+      final loopedFrame = loopState == LoopState.off ? frame : getLoopedFrame(frame);
 
       return max(min(loopedFrame, beatToFrames(endBeat)), 0);
     } else {
@@ -325,8 +312,10 @@ class Sequence {
   /// Returns the number of frames elapsed since the last audio render callback
   /// was called.
   int _getFramesSinceLastRender() {
-    final microsecondsSinceLastRender =
-        max(0, DateTime.now().microsecondsSinceEpoch - NativeBridge.getLastRenderTimeUs());
+    final microsecondsSinceLastRender = max(
+      0,
+      DateTime.now().microsecondsSinceEpoch - NativeBridge.getLastRenderTimeUs(),
+    );
 
     return globalState.usToFrames(microsecondsSinceLastRender);
   }
@@ -342,7 +331,7 @@ class Sequence {
   }
 
   Future<List<Track>> _createTracks(List<Instrument> instruments) async {
-    final tracks = await Future.wait(instruments.map((instrument) => _createTrack(instrument)));
+    final tracks = await Future.wait(instruments.map(_createTrack));
     final nonNullTracks = tracks.whereType<Track>().toList();
 
     return nonNullTracks;

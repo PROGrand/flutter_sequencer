@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 class LabelRow extends StatelessWidget {
   const LabelRow({
-    super.key,
     required this.columnLabels,
     required this.cellSize,
     required this.onNoteOn,
     required this.onNoteOff,
+    super.key,
   });
 
   final List<String> columnLabels;

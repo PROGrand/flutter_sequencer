@@ -3,10 +3,10 @@ import 'package:flutter_sequencer/track.dart';
 
 class TrackSelector extends StatelessWidget {
   const TrackSelector({
-    super.key,
     required this.selectedTrack,
     required this.tracks,
     required this.handleChange,
+    super.key,
   });
 
   final Track? selectedTrack;

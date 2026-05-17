@@ -42,12 +42,16 @@ void _castComplete<R>(Completer<R> completer, Object value) {
   }
 }
 
-Future<R> singleResponseFuture<R>(void Function(SendPort responsePort) action,
-    {Duration? timeout, R? timeoutValue}) {
+Future<R> singleResponseFuture<R>(
+  void Function(SendPort responsePort) action, {
+  Duration? timeout,
+  R? timeoutValue,
+}) {
   final completer = Completer<R>.sync();
   final responsePort = RawReceivePort();
   Timer? timer;
   final zone = Zone.current;
+  // ignore: avoid_types_on_closure_parameters
   responsePort.handler = (Object response) {
     responsePort.close();
     timer?.cancel();

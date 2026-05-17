@@ -12,13 +12,13 @@ import 'sequence.dart';
 /// Represents a track. A track belongs to a sequence and has a collection of
 /// events.
 class Track {
+  Track._withId({required this.sequence, required this.id, required this.instrument});
+
   final Sequence sequence;
   final int id;
   final Instrument instrument;
   final events = <SchedulerEvent>[];
   int lastFrameSynced = 0;
-
-  Track._withId({required this.sequence, required this.id, required this.instrument});
 
   /// Creates a track in the underlying sequencer engine.
   static Future<Track?> build({required Sequence sequence, required Instrument instrument}) async {
@@ -26,7 +26,10 @@ class Track {
 
     if (instrument is Sf2Instrument) {
       id = await NativeBridge.addTrackSf2(
-          instrument.idOrPath, instrument.isAsset, instrument.presetIndex);
+        instrument.idOrPath,
+        instrument.presetIndex,
+        isAsset: instrument.isAsset,
+      );
     } else if (instrument is SfzInstrument) {
       final sfzFile = File(instrument.idOrPath);
       String? normalizedSfzPath;
@@ -69,11 +72,7 @@ class Track {
 
     if (id == -1) return null;
 
-    return Track._withId(
-      sequence: sequence,
-      id: id!,
-      instrument: instrument,
-    );
+    return Track._withId(sequence: sequence, id: id!, instrument: instrument);
   }
 
   /// Handles a Note On event on this track immediately.
@@ -81,7 +80,10 @@ class Track {
   void startNoteNow({required int noteNumber, required double velocity}) {
     final nextBeat = sequence.getBeat();
     final event = MidiEvent.ofNoteOn(
-        beat: nextBeat, noteNumber: noteNumber, velocity: _velocityToMidi(velocity));
+      beat: nextBeat,
+      noteNumber: noteNumber,
+      velocity: _velocityToMidi(velocity),
+    );
 
     NativeBridge.handleEventsNow(id, [event], Sequence.globalState.sampleRate!, sequence.tempo);
   }
@@ -124,27 +126,21 @@ class Track {
 
   /// Adds a Note On and Note Off event to this track.
   /// This does not sync the events to the backend.
-  void addNote(
-      {required int noteNumber,
-      required double velocity,
-      required double startBeat,
-      required double durationBeats}) {
-    addNoteOn(
-      noteNumber: noteNumber,
-      velocity: velocity,
-      beat: startBeat,
-    );
+  void addNote({
+    required int noteNumber,
+    required double velocity,
+    required double startBeat,
+    required double durationBeats,
+  }) {
+    addNoteOn(noteNumber: noteNumber, velocity: velocity, beat: startBeat);
 
-    addNoteOff(
-      noteNumber: noteNumber,
-      beat: startBeat + durationBeats,
-    );
+    addNoteOff(noteNumber: noteNumber, beat: startBeat + durationBeats);
   }
 
   /// Adds a Note On event to this track.
   /// This does not sync the events to the backend.
   void addNoteOn({required int noteNumber, required double velocity, required double beat}) {
-    assert(velocity > 0 && velocity <= 1);
+    assert(velocity > 0 && velocity <= 1, 'Velocity out-of-range: $velocity must be in (0, 1]]');
 
     final noteOnEvent = MidiEvent.ofNoteOn(
       beat: beat,
@@ -158,10 +154,7 @@ class Track {
   /// Adds a Note Off event to this track.
   /// This does not sync the events to the backend.
   void addNoteOff({required int noteNumber, required double beat}) {
-    final noteOffEvent = MidiEvent.ofNoteOff(
-      beat: beat,
-      noteNumber: noteNumber,
-    );
+    final noteOffEvent = MidiEvent.ofNoteOff(beat: beat, noteNumber: noteNumber);
 
     _addEvent(noteOffEvent);
   }
@@ -204,19 +197,20 @@ class Track {
 
   /// Syncs events to the backend. This should be called after making changes to
   /// track events to ensure that the changes are synced immediately.
-  void syncBuffer([int? absoluteStartFrame, int maxEventsToSync = BUFFER_SIZE]) {
+  void syncBuffer([int? absoluteStartFrame, int maxEventsToSync = kBufferSize]) {
     final position = NativeBridge.getPosition();
 
-    if (absoluteStartFrame == null) {
-      absoluteStartFrame = position;
+    var absoluteStartFrameVar = absoluteStartFrame;
+    if (absoluteStartFrameVar == null) {
+      absoluteStartFrameVar = position;
     } else {
-      absoluteStartFrame = max(absoluteStartFrame, position);
+      absoluteStartFrameVar = max(absoluteStartFrameVar, position);
     }
 
-    NativeBridge.clearEvents(id, absoluteStartFrame);
+    NativeBridge.clearEvents(id, absoluteStartFrameVar);
 
     if (sequence.isPlaying) {
-      final relativeStartFrame = absoluteStartFrame - sequence.engineStartFrame;
+      final relativeStartFrame = absoluteStartFrameVar - sequence.engineStartFrame;
       _scheduleEvents(relativeStartFrame, maxEventsToSync);
     } else {
       lastFrameSynced = 0;
@@ -262,17 +256,19 @@ class Track {
 
   /// Builds events that can be scheduled in the sequencer engine's event buffer
   /// and adds them to eventsList.
-  void _scheduleEvents(int startFrame, [int maxEventsToSync = BUFFER_SIZE]) {
-    final isBeforeLoopEnd = sequence.loopState == LoopState.BeforeLoopEnd;
+  void _scheduleEvents(int startFrame, [int maxEventsToSync = kBufferSize]) {
+    final isBeforeLoopEnd = sequence.loopState == LoopState.beforeLoopEnd;
     final loopLength = sequence.getLoopLengthFrames();
-    final loopsElapsed =
-        sequence.loopState == LoopState.Off ? 0 : sequence.getLoopsElapsed(startFrame);
+    final loopsElapsed = sequence.loopState == LoopState.off
+        ? 0
+        : sequence.getLoopsElapsed(startFrame);
 
     var eventsSyncedCount = _scheduleEventsInRange(
-        maxEventsToSync,
-        isBeforeLoopEnd ? sequence.getLoopedFrame(startFrame) : startFrame,
-        sequence.beatToFrames(isBeforeLoopEnd ? sequence.loopEndBeat : sequence.endBeat),
-        loopLength * loopsElapsed);
+      maxEventsToSync,
+      isBeforeLoopEnd ? sequence.getLoopedFrame(startFrame) : startFrame,
+      sequence.beatToFrames(isBeforeLoopEnd ? sequence.loopEndBeat : sequence.endBeat),
+      loopLength * loopsElapsed,
+    );
 
     if (isBeforeLoopEnd) {
       var loopIndex = loopsElapsed + 1;
@@ -282,8 +278,12 @@ class Track {
 
       while (eventsSyncedCount < maxEventsToSync) {
         // Schedule all events in one loop range
-        lastBatchCount = _scheduleEventsInRange(maxEventsToSync - eventsSyncedCount, loopStartFrame,
-            loopEndFrame, loopLength * loopIndex);
+        lastBatchCount = _scheduleEventsInRange(
+          maxEventsToSync - eventsSyncedCount,
+          loopStartFrame,
+          loopEndFrame,
+          loopLength * loopIndex,
+        );
 
         eventsSyncedCount += lastBatchCount;
         if (lastBatchCount == 0) break;
@@ -309,11 +309,17 @@ class Track {
       eventsToSync.add(event);
     }
 
-    final eventsSyncedCount = NativeBridge.scheduleEvents(id, eventsToSync,
-        Sequence.globalState.sampleRate!, sequence.tempo, sequence.engineStartFrame + frameOffset);
+    final eventsSyncedCount = NativeBridge.scheduleEvents(
+      id,
+      eventsToSync,
+      Sequence.globalState.sampleRate!,
+      sequence.tempo,
+      sequence.engineStartFrame + frameOffset,
+    );
 
     if (eventsSyncedCount > 0) {
-      lastFrameSynced = sequence.engineStartFrame +
+      lastFrameSynced =
+          sequence.engineStartFrame +
           sequence.beatToFrames(eventsToSync[eventsSyncedCount - 1].beat) +
           frameOffset;
     }
@@ -338,12 +344,12 @@ class Track {
       } else if (eventA is MidiEvent && eventB is MidiEvent) {
         // Note off should come before note on if the note is the same
         if (eventA.midiData1 == eventB.midiData1 &&
-            eventA.midiStatus == MIDI_STATUS_NOTE_OFF &&
-            eventB.midiStatus == MIDI_STATUS_NOTE_ON) {
+            eventA.midiStatus == kMidiStatusNoteOff &&
+            eventB.midiStatus == kMidiStatusNoteOn) {
           return -1;
         } else if (eventA.midiData1 == eventB.midiData1 &&
-            eventA.midiStatus == MIDI_STATUS_NOTE_ON &&
-            eventB.midiStatus == MIDI_STATUS_NOTE_OFF) {
+            eventA.midiStatus == kMidiStatusNoteOn &&
+            eventB.midiStatus == kMidiStatusNoteOff) {
           return 1;
         } else {
           return 0;

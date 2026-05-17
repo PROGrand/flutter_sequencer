@@ -35,6 +35,8 @@ class FlutterSequencerPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
+    private var isLibraryLoaded = false
+
     override fun onMethodCall(call: MethodCall, result: Result) {
         if (call.method == "getPlatformVersion") {
             result.success("Android ${android.os.Build.VERSION.RELEASE}")

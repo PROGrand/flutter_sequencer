@@ -3,11 +3,11 @@ import 'package:flutter_sequencer_example/constants.dart';
 
 class Cell extends StatelessWidget {
   const Cell({
-    super.key,
     required this.size,
     required this.velocity,
     required this.isCurrentStep,
     required this.onChange,
+    super.key,
   });
 
   final double size;
@@ -41,12 +41,12 @@ class Cell extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        final nextVelocity = velocity == 0.0 ? DEFAULT_VELOCITY : 0.0;
+        final nextVelocity = velocity == 0.0 ? kDefaultVelocity : 0.0;
 
         onChange(nextVelocity);
       },
       onVerticalDragUpdate: (details) {
-        final renderBox = context.findRenderObject() as RenderBox;
+        final renderBox = context.findRenderObject()! as RenderBox;
         final yPos = renderBox.globalToLocal(details.globalPosition).dy;
         final nextVelocity = 1.0 - (yPos / size).clamp(0.0, 1.0);
 

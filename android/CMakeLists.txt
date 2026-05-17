@@ -1,6 +1,9 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.18.1)
+
+set(ANDROID_STL c++_static)
+
 PROJECT(Sequencer)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.18.1)
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -26,7 +29,7 @@ TARGET_INCLUDE_DIRECTORIES(flutter_sequencer PRIVATE
         ../ios/Classes/CallbackManager
         ../ios/Classes/Scheduler
         ../ios/Classes/IInstrument
-        )
+)
 TARGET_SOURCES(flutter_sequencer PRIVATE
         ../ios/Classes/CallbackManager/CallbackManager.h
         ../ios/Classes/CallbackManager/CallbackManager.cpp
@@ -45,8 +48,14 @@ TARGET_SOURCES(flutter_sequencer PRIVATE
         ./src/main/cpp/Utils/Logging.h
         ./src/main/cpp/Utils/OptionArray.h
         ./src/main/cpp/Plugin.cpp
-        )
+)
 
 FIND_LIBRARY(android-lib android)
 
-TARGET_LINK_LIBRARIES(flutter_sequencer ${android-lib} oboe sfizz_static)
+# Fixed target link libraries with C++ standard library
+TARGET_LINK_LIBRARIES(flutter_sequencer
+        ${android-lib}
+        oboe
+        sfizz_static
+        c++_static
+)

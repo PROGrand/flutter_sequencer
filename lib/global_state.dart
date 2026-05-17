@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
+
 import 'constants.dart';
+import 'flutter_sequencer.dart';
 import 'native_bridge.dart';
 import 'sequence.dart';
 import 'track.dart';
@@ -9,15 +12,15 @@ import 'track.dart';
 /// responsible for setting up, starting, and stopping the engine. It also
 /// maintains the timer for "topping off" the buffers.
 class GlobalState {
-  static final GlobalState _globalState = GlobalState._internal();
+  factory GlobalState() {
+    return _globalState;
+  }
 
   GlobalState._internal() {
     _setupEngine();
   }
 
-  factory GlobalState() {
-    return _globalState;
-  }
+  static final GlobalState _globalState = GlobalState._internal();
 
   var keepEngineRunning = false;
   final sequenceIdMap = <int, Sequence>{};
@@ -25,11 +28,11 @@ class GlobalState {
   var isEngineReady = false;
   Timer? _topOffTimer;
   int lastTickInBuffer = 0;
-  final onEngineReadyCallbacks = <Function()>[];
+  final onEngineReadyCallbacks = <void Function()>[];
 
   /// Calls a function when the sequencer engine is ready. Trying to play the
   /// sequence won't do anything until the engine is ready.
-  void onEngineReady(Function() callback) {
+  void onEngineReady(void Function() callback) {
     if (isEngineReady) {
       callback();
     } else {
@@ -37,17 +40,6 @@ class GlobalState {
     }
   }
 
-  /// Set this to true in your app's initState to leave the audio engine running
-  /// even when there is no sequence playing. This may consume more energy.
-  /// With this setting enabled, you can use Track.startNoteNow etc to play
-  /// an instrument in real time.
-  void setKeepEngineRunning(bool nextValue) {
-    keepEngineRunning = nextValue;
-  }
-
-  /// {@template flutter_sequencer_library_private}
-  /// For internal use only.
-  /// {@endtemplate}
   /// Registers the sequence with the underlying engine.
   int registerSequence(Sequence sequence) {
     var nextId = 0;
@@ -77,7 +69,7 @@ class GlobalState {
 
     sequence.isPlaying = true;
     sequence.engineStartFrame =
-        LEAD_FRAMES + NativeBridge.getPosition() - sequence.beatToFrames(sequence.pauseBeat);
+        kLeadFrames + NativeBridge.getPosition() - sequence.beatToFrames(sequence.pauseBeat);
 
     _syncAllBuffers();
 
@@ -109,17 +101,28 @@ class GlobalState {
   /// {@macro flutter_sequencer_library_private}
   int usToFrames(int us) {
     if (sampleRate == null) return 0;
-    return (us * SECONDS_PER_US * sampleRate!).round();
+    return (us * kSecondsPerUs * sampleRate!).round();
   }
 
   /// {@macro flutter_sequencer_library_private}
   int framesToUs(int frames) {
     if (sampleRate == null) return 0;
-    return (frames / (SECONDS_PER_US * sampleRate!)).round();
+    return (frames / (kSecondsPerUs * sampleRate!)).round();
   }
 
-  void _setupEngine() async {
-    sampleRate = await NativeBridge.doSetup();
+  Future<void> _setupEngine() async {
+    final _flutterSequencerPlugin = FlutterSequencer();
+    String platformVersion;
+    try {
+      platformVersion =
+          await _flutterSequencerPlugin.getPlatformVersion() ?? 'Unknown platform version';
+    } catch (_) {
+      platformVersion = 'Failed to get platform version.';
+    }
+
+    print('XXX platform_version:$platformVersion');
+
+    sampleRate = await _flutterSequencerPlugin.doSetup();
     isEngineReady = true;
     for (final callback in onEngineReadyCallbacks) {
       callback();
@@ -139,7 +142,7 @@ class GlobalState {
     if (!keepEngineRunning) NativeBridge.play();
 
     if (_topOffTimer != null) _topOffTimer!.cancel();
-    _topOffTimer = Timer.periodic(Duration(milliseconds: 1000), (_) {
+    _topOffTimer = Timer.periodic(const Duration(milliseconds: 1000), (_) {
       _topOffAllBuffers();
 
       for (final sequence in sequenceIdMap.values) {
@@ -159,9 +162,7 @@ class GlobalState {
     final tracks = <Track>[];
 
     sequenceIdMap.forEach((_, sequence) {
-      sequence.getTracks().forEach((track) {
-        tracks.add(track);
-      });
+      sequence.getTracks().forEach(tracks.add);
     });
 
     return tracks;
@@ -174,7 +175,7 @@ class GlobalState {
     });
   }
 
-  void _syncAllBuffers([int? absoluteStartFrame, int maxEventsToSync = BUFFER_SIZE]) {
+  void _syncAllBuffers([int? absoluteStartFrame, int maxEventsToSync = kBufferSize]) {
     _getAllTracks().forEach((track) {
       track.syncBuffer(absoluteStartFrame, maxEventsToSync);
     });

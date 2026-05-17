@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class VolumeSlider extends StatelessWidget {
-  const VolumeSlider({super.key, required this.value, required this.onChange});
+  const VolumeSlider({required this.value, required this.onChange, super.key});
 
   final double value;
   final Function(double) onChange;
@@ -11,8 +11,8 @@ class VolumeSlider extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('Volume:'),
-        Slider(min: 0, max: 1, value: value, onChanged: onChange),
+        const Text('Volume:'),
+        Slider(value: value, onChanged: onChange),
       ],
     );
   }

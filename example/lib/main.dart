@@ -5,19 +5,18 @@ import 'package:flutter_sequencer/models/instrument.dart';
 import 'package:flutter_sequencer/models/sfz.dart';
 import 'package:flutter_sequencer/sequence.dart';
 import 'package:flutter_sequencer/track.dart';
-
-import 'components/drum_machine/drum_machine.dart';
-import 'components/position_view.dart';
-import 'components/step_count_selector.dart';
-import 'components/tempo_selector.dart';
-import 'components/track_selector.dart';
-import 'components/transport.dart';
-import 'constants.dart';
-import 'models/project_state.dart';
-import 'models/step_sequencer_state.dart';
+import 'package:flutter_sequencer_example/components/drum_machine/drum_machine.dart';
+import 'package:flutter_sequencer_example/components/position_view.dart';
+import 'package:flutter_sequencer_example/components/step_count_selector.dart';
+import 'package:flutter_sequencer_example/components/tempo_selector.dart';
+import 'package:flutter_sequencer_example/components/track_selector.dart';
+import 'package:flutter_sequencer_example/components/transport.dart';
+import 'package:flutter_sequencer_example/constants.dart';
+import 'package:flutter_sequencer_example/models/project_state.dart';
+import 'package:flutter_sequencer_example/models/step_sequencer_state.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
@@ -28,51 +27,51 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
-  final sequence = Sequence(tempo: INITIAL_TEMPO, endBeat: INITIAL_STEP_COUNT.toDouble());
+  final sequence = Sequence(tempo: kInitialTempo, endBeat: kInitialStepCount.toDouble());
   Map<int, StepSequencerState?> trackStepSequencerStates = {};
   List<Track> tracks = [];
   Map<int, double> trackVolumes = {};
   Track? selectedTrack;
   late Ticker ticker;
-  double tempo = INITIAL_TEMPO;
-  int stepCount = INITIAL_STEP_COUNT;
+  double tempo = kInitialTempo;
+  int stepCount = kInitialStepCount;
   double position = 0.0;
   bool isPlaying = false;
-  bool isLooping = INITIAL_IS_LOOPING;
+  bool isLooping = kInitialIsLooping;
 
   @override
   void initState() {
     super.initState();
 
-    GlobalState().setKeepEngineRunning(true);
+    GlobalState().keepEngineRunning = true;
 
     final instruments = [
-      Sf2Instrument(path: "assets/sf2/TR-808.sf2", isAsset: true),
-      SfzInstrument(
-        path: "assets/sfz/GMPiano.sfz",
+      const Sf2Instrument(path: 'assets/sf2/TR-808.sf2', isAsset: true),
+      const SfzInstrument(
+        path: 'assets/sfz/GMPiano.sfz',
         isAsset: true,
-        tuningPath: "assets/sfz/meanquar.scl",
+        tuningPath: 'assets/sfz/meanquar.scl',
       ),
       RuntimeSfzInstrument(
-        id: "Sampled Synth",
-        sampleRoot: "assets/wav",
+        id: 'Sampled Synth',
+        sampleRoot: 'assets/wav',
         isAsset: true,
         sfz: Sfz(
           groups: [
             SfzGroup(
               regions: [
-                SfzRegion(sample: "D3.wav", key: 62),
-                SfzRegion(sample: "F3.wav", key: 65),
-                SfzRegion(sample: "Gsharp3.wav", key: 68),
+                SfzRegion(sample: 'D3.wav', key: 62),
+                SfzRegion(sample: 'F3.wav', key: 65),
+                SfzRegion(sample: 'Gsharp3.wav', key: 68),
               ],
             ),
           ],
         ),
       ),
       RuntimeSfzInstrument(
-        id: "Generated Synth",
+        id: 'Generated Synth',
         // This SFZ doesn't use any sample files, so just put "/" as a placeholder.
-        sampleRoot: "/",
+        sampleRoot: '/',
         isAsset: false,
         // Based on the Unison Oscillator example here:
         // https://sfz.tools/sfizz/quick_reference#unison-oscillator
@@ -81,8 +80,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
             SfzGroup(
               regions: [
                 SfzRegion(
-                  sample: "*saw",
-                  otherOpcodes: {"oscillator_multi": "5", "oscillator_detune": "50"},
+                  sample: '*saw',
+                  otherOpcodes: {'oscillator_multi': '5', 'oscillator_detune': '50'},
                 ),
               ],
             ),
@@ -129,7 +128,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     sequence.stop();
   }
 
-  void handleSetLoop(bool nextIsLooping) {
+  void handleSetLoop({required bool nextIsLooping}) {
     if (nextIsLooping) {
       sequence.setLoop(0, stepCount.toDouble());
     } else {
@@ -144,13 +143,13 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   void handleToggleLoop() {
     final nextIsLooping = !isLooping;
 
-    handleSetLoop(nextIsLooping);
+    handleSetLoop(nextIsLooping: nextIsLooping);
   }
 
   void handleStepCountChange(int nextStepCount) {
     if (nextStepCount < 1) return;
 
-    sequence.setEndBeat(nextStepCount.toDouble());
+    sequence.endBeat = nextStepCount.toDouble();
 
     if (isLooping) {
       final nextLoopEndBeat = nextStepCount.toDouble();
@@ -216,7 +215,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
     handleStepCountChange(projectState.stepCount);
     handleTempoChange(projectState.tempo);
-    handleSetLoop(projectState.isLooping);
+    handleSetLoop(nextIsLooping: projectState.isLooping);
 
     tracks.forEach(syncTrack);
   }
@@ -230,7 +229,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   }
 
   Widget _getMainView() {
-    if (selectedTrack == null) return Text('Loading...');
+    if (selectedTrack == null) return const Text('Loading...');
 
     final isDrumTrackSelected = selectedTrack == tracks[0];
 
@@ -265,16 +264,16 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              MaterialButton(onPressed: handleReset, child: Text('Reset')),
-              MaterialButton(onPressed: handleLoadDemo, child: Text('Load Demo')),
+              MaterialButton(onPressed: handleReset, child: const Text('Reset')),
+              MaterialButton(onPressed: handleLoadDemo, child: const Text('Load Demo')),
             ],
           ),
           DrumMachineWidget(
             track: selectedTrack!,
             stepCount: stepCount,
             currentStep: position.floor(),
-            rowLabels: isDrumTrackSelected ? ROW_LABELS_DRUMS : ROW_LABELS_PIANO,
-            columnPitches: isDrumTrackSelected ? ROW_PITCHES_DRUMS : ROW_PITCHES_PIANO,
+            rowLabels: isDrumTrackSelected ? kRowLabelsDrums : kRowLabelsPiano,
+            columnPitches: isDrumTrackSelected ? kRowPitchesDrums : kRowPitchesPiano,
             volume: trackVolumes[selectedTrack!.id] ?? 0.0,
             stepSequencerState: trackStepSequencerStates[selectedTrack!.id],
             handleVolumeChange: handleVolumeChange,
@@ -289,7 +288,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
-        colorScheme: ColorScheme.dark(),
+        colorScheme: const ColorScheme.dark(),
         textTheme: Theme.of(context).textTheme.apply(bodyColor: Colors.white),
       ),
       home: Scaffold(

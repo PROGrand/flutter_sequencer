@@ -2,12 +2,7 @@ import 'package:flutter/material.dart';
 
 class Transport extends StatelessWidget {
   const Transport({
-    super.key,
-    required this.isPlaying,
-    required this.isLooping,
-    required this.onTogglePlayPause,
-    required this.onStop,
-    required this.onToggleLoop,
+    required this.isPlaying, required this.isLooping, required this.onTogglePlayPause, required this.onStop, required this.onToggleLoop, super.key,
   });
 
   final bool isPlaying;
@@ -26,9 +21,9 @@ class Transport extends StatelessWidget {
           color: Colors.pink,
           icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
         ),
-        IconButton(icon: Icon(Icons.stop), onPressed: onStop, color: Colors.pink),
+        IconButton(icon: const Icon(Icons.stop), onPressed: onStop, color: Colors.pink),
         IconButton(
-          icon: Icon(Icons.repeat),
+          icon: const Icon(Icons.repeat),
           onPressed: onToggleLoop,
           color: isLooping ? Colors.pink : Colors.black54,
         ),

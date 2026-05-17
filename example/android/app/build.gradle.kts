@@ -5,8 +5,8 @@ plugins {
 }
 android {
     namespace = "com.michaeljperri.flutter_sequencer_example"
-    compileSdk = 35
-    ndkVersion = "27.0.12077973"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -19,7 +19,7 @@ android {
 
     defaultConfig {
         applicationId = "com.michaeljperri.flutter_sequencer_example"
-        minSdk = 25
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -32,11 +32,6 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("debug")
-        }
-    }
-
-    signingConfigs {
-        getByName("debug") {
         }
     }
 }

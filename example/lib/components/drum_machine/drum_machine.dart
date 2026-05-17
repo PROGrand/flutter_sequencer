@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_sequencer/track.dart';
+import 'package:flutter_sequencer_example/components/drum_machine/grid/grid.dart';
+import 'package:flutter_sequencer_example/components/drum_machine/volume_slider.dart';
 import 'package:flutter_sequencer_example/models/step_sequencer_state.dart';
-
-import 'grid/grid.dart';
-import 'volume_slider.dart';
 
 class DrumMachineWidget extends StatefulWidget {
   const DrumMachineWidget({
-    super.key,
     required this.track,
     required this.stepCount,
     required this.currentStep,
@@ -18,6 +16,7 @@ class DrumMachineWidget extends StatefulWidget {
     required this.stepSequencerState,
     required this.handleVolumeChange,
     required this.handleVelocitiesChange,
+    super.key,
   });
 
   final Track track;
@@ -61,8 +60,8 @@ class _DrumMachineWidgetState extends State<DrumMachineWidget> with SingleTicker
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: EdgeInsets.fromLTRB(32, 16, 32, 0),
-        decoration: BoxDecoration(color: Colors.black54),
+        padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
+        decoration: const BoxDecoration(color: Colors.black54),
         child: Column(
           children: [
             VolumeSlider(value: widget.volume, onChange: handleVolumeChange),

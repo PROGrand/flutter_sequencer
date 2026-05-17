@@ -1,6 +1,6 @@
 import 'package:flutter_sequencer_example/constants.dart';
 
-import 'step_sequencer_state.dart';
+import 'package:flutter_sequencer_example/models/step_sequencer_state.dart';
 
 class ProjectState {
   ProjectState({
@@ -13,19 +13,11 @@ class ProjectState {
     required this.synthState,
   });
 
-  final int stepCount;
-  final double tempo;
-  final bool isLooping;
-  final StepSequencerState drumState;
-  final StepSequencerState pianoState;
-  final StepSequencerState bassState;
-  final StepSequencerState synthState;
-
-  static ProjectState empty() {
+  factory ProjectState.empty() {
     return ProjectState(
-      stepCount: INITIAL_STEP_COUNT,
-      tempo: INITIAL_TEMPO,
-      isLooping: INITIAL_IS_LOOPING,
+      stepCount: kInitialStepCount,
+      tempo: kInitialTempo,
+      isLooping: kInitialIsLooping,
       drumState: StepSequencerState(),
       pianoState: StepSequencerState(),
       bassState: StepSequencerState(),
@@ -33,7 +25,7 @@ class ProjectState {
     );
   }
 
-  static ProjectState demo() {
+  factory ProjectState.demo() {
     final drumState = StepSequencerState();
 
     drumState.setVelocity(0, 44, 0.75);
@@ -163,4 +155,12 @@ class ProjectState {
       synthState: synthState,
     );
   }
+
+  final int stepCount;
+  final double tempo;
+  final bool isLooping;
+  final StepSequencerState drumState;
+  final StepSequencerState pianoState;
+  final StepSequencerState bassState;
+  final StepSequencerState synthState;
 }

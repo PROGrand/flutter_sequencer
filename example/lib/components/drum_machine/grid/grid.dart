@@ -2,12 +2,10 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-
-import 'cell.dart';
+import 'package:flutter_sequencer_example/components/drum_machine/grid/cell.dart';
 
 class Grid extends StatelessWidget {
   const Grid({
-    super.key,
     required this.getVelocity,
     required this.columnLabels,
     required this.stepCount,
@@ -15,6 +13,7 @@ class Grid extends StatelessWidget {
     required this.onChange,
     required this.onNoteOn,
     required this.onNoteOff,
+    super.key,
   });
 
   final Function(int step, int col) getVelocity;
@@ -33,6 +32,7 @@ class Grid extends StatelessWidget {
         final cellSize = min(constraints.maxWidth / columnLabels.length, 50.0);
 
         return ListView.builder(
+          // ignore: prefer_const_constructors
           padding: EdgeInsets.fromLTRB(0, 0, 0, 16),
           shrinkWrap: true,
           itemCount: stepCount,

@@ -4,14 +4,14 @@ group 'com.michaeljperri.flutter_sequencer'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.9.10'
+    ext.kotlin_version = '2.2.20'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.6.1'
+        classpath 'com.android.tools.build:gradle:8.11.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r"
     }
@@ -30,6 +30,8 @@ apply plugin: 'kotlin-android'
 android {
     namespace "com.michaeljperri.flutter_sequencer"
 
+    compileSdk = 36
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -38,15 +40,14 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
-    compileSdk = 35
-    ndkVersion = "27.0.12077973"
+//    ndkVersion = "27.0.12077973"
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
     defaultConfig {
-        minSdk 23
+        minSdk 24
 
         externalNativeBuild {
             cmake {
@@ -94,7 +95,7 @@ void cloneThirdPartyRepo(String name, String uri, String commit) {
 task cloneThirdPartyRepos {
     cloneThirdPartyRepo('oboe', 'https://github.com/google/oboe', 'e40043061cc94df965fda802938b0989f201e86c')
     cloneThirdPartyRepo('TinySoundFont', 'https://github.com/schellingb/TinySoundFont.git', '790a219810cb0fca5defa8cdbd88e2487e5efc7a')
-    cloneThirdPartyRepo('sfizz', 'https://github.com/PROGrand/sfizz.git', 'a5cacdb0abdcabfd3ff1d302d7a2e8784627e340')
+    cloneThirdPartyRepo('sfizz', 'https://github.com/PROGrand/sfizz.git', '040be90a34cfa14493a3b51887161d5393616638')
 }
 
 preBuild.dependsOn cloneThirdPartyRepos
