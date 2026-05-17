@@ -14,6 +14,7 @@ import 'package:flutter_sequencer_example/components/transport.dart';
 import 'package:flutter_sequencer_example/constants.dart';
 import 'package:flutter_sequencer_example/models/project_state.dart';
 import 'package:flutter_sequencer_example/models/step_sequencer_state.dart';
+import 'package:maplibre/maplibre.dart';
 
 void main() {
   runApp(const MyApp());
@@ -292,8 +293,41 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
         textTheme: Theme.of(context).textTheme.apply(bodyColor: Colors.white),
       ),
       home: Scaffold(
-        appBar: AppBar(title: const Text('Drum machine example')),
-        body: _getMainView(),
+        body: Column(
+          children: [
+            const Expanded(child: MapScreen()),
+            Expanded(flex: 2, child: _getMainView()),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class MapScreen extends StatefulWidget {
+  const MapScreen({super.key});
+
+  @override
+  State createState() => MapScreenState();
+}
+
+class MapScreenState extends State<MapScreen> {
+  MapController? _mapController;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: MapLibreMap(
+        onMapCreated: (controller) {
+          // Store the map controller for later use. You can use it to control
+          // the map programmatically.
+          _mapController = controller;
+        },
+        onStyleLoaded: (style) {
+          // Add your sources and layers here or do any other setup after the
+          // style has been loaded.
+          debugPrint('Map loaded 😎');
+        },
       ),
     );
   }

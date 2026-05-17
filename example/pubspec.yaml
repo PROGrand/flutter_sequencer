@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
   flutter_sequencer:
     path: ../
+  maplibre: ^0.3.5
 
 dev_dependencies:
   flutter_lints:
